@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대드론(Anti-Drone) 기술 통합 대시보드</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#0f172a',
+                            900: '#0b1120',
+                            950: '#020617',
+                        },
+                        defense: {
+                            blue: '#1e3a8a',
+                            accent: '#3b82f6',
+                            cyan: '#06b6d4',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e3a8a; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6; 
+        }
+        
+        /* Glassmorphism utilities */
+        .glass {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(6, 182, 212, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.3);
+            transform: translateY(-5px);
+        }
+
+        /* Timeline Styles */
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, #1e3a8a, #06b6d4);
+        }
+        @media (max-width: 768px) {
+            .timeline-line {
+                left: 20px;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-navy-950 text-slate-300 font-sans antialiased overflow-x-hidden relative selection:bg-defense-accent selection:text-white">
+
+    <!-- Background Pattern -->
+    <div class="fixed inset-0 z-[-1] opacity-20 pointer-events-none" style="background-image: radial-gradient(#3b82f6 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="fixed w-full z-50 glass border-b border-slate-800 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-defense-blue to-defense-cyan flex items-center justify-center mr-3 shadow-lg shadow-defense-blue/30">
+                        <i class="fa-solid fa-crosshairs text-white text-xl"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-white">대드론 <span class="text-defense-cyan">통합 대시보드</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#hero" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800/50">개요</a>
+                        <a href="#timeline" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800/50">발전사 및 전망</a>
+                        <a href="#tech" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800/50">핵심 기술</a>
+                        <a href="#news" class="bg-defense-blue/20 text-defense-cyan border border-defense-blue/50 hover:bg-defense-blue/40 px-4 py-2 rounded-md text-sm font-medium transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]">일일 동향</a>
+                    </div>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-300 hover:text-white focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden glass border-t border-slate-800">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#hero" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">개요</a>
+                <a href="#timeline" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">발전사 및 전망</a>
+                <a href="#tech" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">핵심 기술</a>
+                <a href="#news" class="block text-defense-cyan font-bold px-3 py-2 rounded-md text-base">일일 동향</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center pt-20 pb-12 overflow-hidden">
+        <!-- Glowing Orbs -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-defense-blue rounded-full mix-blend-screen filter blur-[100px] opacity-20"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-defense-cyan rounded-full mix-blend-screen filter blur-[100px] opacity-20"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div class="inline-block mb-4 px-4 py-1.5 rounded-full border border-defense-cyan/30 bg-defense-cyan/10 text-defense-cyan text-sm font-semibold tracking-wide backdrop-blur-sm shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                C5ISR 및 다층방공체계 기반
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+                차세대 <span class="text-transparent bg-clip-text bg-gradient-to-r from-defense-accent to-defense-cyan">안티드론</span><br>방위 통합 플랫폼
+            </h1>
+            <p class="mt-4 text-xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed mb-10">
+                AI 기반 지능형 항적 분석부터 자율 방공 지휘결심, 고출력 레이저 요격 및 워리어 플랫폼 타격 체계까지. 미래 전장의 공중 위협에 대응하는 완벽한 다층 방어 솔루션 대시보드입니다.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#news" class="px-8 py-4 bg-gradient-to-r from-defense-blue to-defense-accent hover:from-defense-accent hover:to-defense-cyan text-white rounded-lg font-bold text-lg transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-satellite-dish"></i> 최신 동향 모니터링
+                </a>
+                <a href="#tech" class="px-8 py-4 glass text-white hover:bg-white/10 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-microchip"></i> 핵심 기술 정보
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section id="timeline" class="py-24 bg-navy-900 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">대드론 기술 발전사 및 미래 전망</h2>
+                <div class="w-24 h-1 bg-defense-accent mx-auto rounded-full mb-4"></div>
+                <p class="text-slate-400 max-w-2xl mx-auto">지난 10년의 기반 구축을 넘어, 향후 10년의 자율·지능형 다층 방공 체계로의 진화</p>
+            </div>
+
+            <div class="relative mt-10">
+                <div class="timeline-line hidden md:block"></div>
+                
+                <div class="space-y-12">
+                    <!-- Past 10 Years -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-between w-full">
+                        <div class="md:w-5/12 order-2 md:order-1 mt-6 md:mt-0 glass-card p-6 rounded-xl">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 rounded bg-slate-800 flex items-center justify-center text-slate-400 mr-3">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white">과거 10년 (2014~2023)</h3>
+                            </div>
+                            <h4 class="text-defense-accent font-semibold mb-2">도입 및 탐지/무력화 다변화</h4>
+                            <ul class="space-y-3 text-slate-400 text-sm">
+                                <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2 text-xs"></i> <span><strong>초기 기반 구축:</strong> 주요 시설 대공방어를 위한 탐지 센서 및 재밍(Jamming) 위주의 소프트킬(Soft-kill) 중심 개발.</span></li>
+                                <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2 text-xs"></i> <span><strong>탐지 고도화:</strong> 레이더와 EO/IR(광학/적외선) 센서 융합 탐지율 극대화, GPS 스푸핑 기술 연구.</span></li>
+                                <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2 text-xs"></i> <span><strong>하드킬 통합 본격화:</strong> 소형 공격 드론 등장에 따른 물리적 타격(Hard-kill) 체계 연구 및 접적지역 통합체계 획득 시작.</span></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="order-1 md:order-2 z-10 w-12 h-12 bg-navy-900 border-4 border-slate-700 rounded-full flex items-center justify-center shadow-lg mb-6 md:mb-0">
+                            <span class="w-4 h-4 bg-slate-500 rounded-full"></span>
+                        </div>
+                        
+                        <div class="md:w-5/12 order-3 md:order-3"></div>
+                    </div>
+
+                    <!-- Future 10 Years -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-between w-full">
+                        <div class="md:w-5/12 order-1 md:order-1"></div>
+                        
+                        <div class="order-1 md:order-2 z-10 w-12 h-12 bg-navy-900 border-4 border-defense-cyan rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] mb-6 md:mb-0 mt-8 md:mt-0">
+                            <span class="w-4 h-4 bg-defense-cyan rounded-full shadow-[0_0_10px_rgba(6,182,212,1)] animate-pulse"></span>
+                        </div>
+                        
+                        <div class="md:w-5/12 order-2 md:order-3 mt-6 md:mt-0 glass-card p-6 rounded-xl border-defense-cyan/40">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 rounded bg-defense-blue/20 flex items-center justify-center text-defense-cyan mr-3">
+                                    <i class="fa-solid fa-rocket"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white">미래 10년 (2024~2034)</h3>
+                            </div>
+                            <h4 class="text-defense-cyan font-semibold mb-2">자율·지능형 다층 방공체계 진화</h4>
+                            <ul class="space-y-3 text-slate-300 text-sm">
+                                <li class="flex items-start"><i class="fa-solid fa-angles-right text-defense-cyan mt-1 mr-2 text-xs"></i> <span><strong>지능형 위협 예측:</strong> 다중 센서 데이터를 AI가 실시간 융합, 기동 패턴을 분석해 잠재 위협을 스스로 예측.</span></li>
+                                <li class="flex items-start"><i class="fa-solid fa-angles-right text-defense-cyan mt-1 mr-2 text-xs"></i> <span><strong>자율 지휘결심:</strong> 인력 개입 최소화, 시스템 자율 판단으로 최적의 방어 수단 교전을 수행하는 다중 방호망 구축.</span></li>
+                                <li class="flex items-start"><i class="fa-solid fa-angles-right text-defense-cyan mt-1 mr-2 text-xs"></i> <span><strong>고에너지 요격 & 타격:</strong> 빔 집속 레이저 무기의 기동화, 워리어 플랫폼과 연동된 초연결 스마트 무장 대공 타격 실현.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Technologies Section -->
+    <section id="tech" class="py-24 relative overflow-hidden">
+        <!-- Abstract Tech Background -->
+        <div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-defense-blue/5 to-transparent z-[-1]"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-16">
+                <span class="text-defense-accent font-semibold tracking-wider text-sm uppercase">Core Technologies</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mt-2 mb-4">국방기술기획 기반 핵심 방어체계</h2>
+                <div class="w-24 h-1 bg-defense-accent rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Tech Card 1 -->
+                <div class="glass-card p-8 rounded-2xl relative group overflow-hidden flex flex-col h-full">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-radar text-6xl text-defense-cyan"></i>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl text-defense-cyan mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 leading-tight">지능형 공중 위협 탐지<br>& 정보 분석</h3>
+                    <p class="text-slate-400 text-sm flex-grow">
+                        지상 및 공중레이더 탐지 정보를 융합하고, AI 기반 패턴 분석을 통해 대상 무기체계의 정보를 조기에 예측하는 지능화 항적융합 기술입니다.
+                    </p>
+                    <div class="mt-6 pt-4 border-t border-slate-800/50">
+                        <span class="text-xs text-defense-accent font-medium bg-defense-blue/10 px-2 py-1 rounded">다중방공체계 위협평가</span>
+                    </div>
+                </div>
+
+                <!-- Tech Card 2 -->
+                <div class="glass-card p-8 rounded-2xl relative group overflow-hidden flex flex-col h-full">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-network-wired text-6xl text-defense-accent"></i>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl text-defense-accent mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 leading-tight">자율 방공 및<br>지휘결심 체계</h3>
+                    <p class="text-slate-400 text-sm flex-grow">
+                        수도권 등 다층 위협 방어를 위해 다층 방공 시스템과 연동하여 적의 위협을 조기 식별하고 최적의 타격 수단을 자율적으로 판단하는 아키텍처입니다.
+                    </p>
+                    <div class="mt-6 pt-4 border-t border-slate-800/50">
+                        <span class="text-xs text-defense-accent font-medium bg-defense-blue/10 px-2 py-1 rounded">다중 자율방호 시스템</span>
+                    </div>
+                </div>
+
+                <!-- Tech Card 3 -->
+                <div class="glass-card p-8 rounded-2xl relative group overflow-hidden flex flex-col h-full">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-bolt text-6xl text-yellow-500"></i>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl text-yellow-500 mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-burst"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 leading-tight">고출력 레이저<br>요격 체계</h3>
+                    <p class="text-slate-400 text-sm flex-grow">
+                        군집 드론 등 하위 위협에 효과적으로 대응하기 위한 기동형 무기체계. 체계 반응시간을 최소화하는 빔 집속 및 정밀 추적 영상처리 기술이 적용됩니다.
+                    </p>
+                    <div class="mt-6 pt-4 border-t border-slate-800/50">
+                        <span class="text-xs text-yellow-500 font-medium bg-yellow-500/10 px-2 py-1 rounded">물리적 타격 (Hard-kill)</span>
+                    </div>
+                </div>
+
+                <!-- Tech Card 4 -->
+                <div class="glass-card p-8 rounded-2xl relative group overflow-hidden flex flex-col h-full">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-person-rifle text-6xl text-green-400"></i>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl text-green-400 mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-crosshairs"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 leading-tight">개인전투체계 기반<br>대공 타격</h3>
+                    <p class="text-slate-400 text-sm flex-grow">
+                        차세대 워리어 플랫폼에 장착 가능한 고화력·고정밀 초소형 스마트 무장(유도탄 등)을 통해 일선 전투원의 저속 대공표적 동시다발 교전 능력을 확보합니다.
+                    </p>
+                    <div class="mt-6 pt-4 border-t border-slate-800/50">
+                        <span class="text-xs text-green-400 font-medium bg-green-400/10 px-2 py-1 rounded">워리어 플랫폼 연동</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Daily Tech Trends (News Feed) Section -->
+    <section id="news" class="py-24 bg-navy-900 border-t border-slate-800 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-slate-700 pb-6">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                        <i class="fa-solid fa-rss text-defense-cyan"></i> 일일 기술 동향 대시보드
+                    </h2>
+                    <p class="text-slate-400">자동 수집된 글로벌 안티드론 논문, 방위사업청 발표 및 최신 기술 뉴스</p>
+                </div>
+                <div class="mt-4 md:mt-0 glass px-5 py-3 rounded-lg border border-defense-cyan/30 flex items-center gap-3 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                    <i class="fa-regular fa-calendar text-defense-cyan"></i>
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Today's Update</span>
+                        <span id="current-date" class="text-white font-bold tracking-wide">로딩중...</span>
+                    </div>
+                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse ml-2" title="Live Updating"></div>
+                </div>
+            </div>
+
+            <!-- News Feed Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Main News Area -->
+                <div class="lg:col-span-2 space-y-4" id="news-container">
+                    <!-- JavaScript will inject news items here -->
+                    <div class="text-center py-10 text-slate-500">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i>
+                        <p>데이터베이스에서 최신 동향을 불러오는 중입니다...</p>
+                    </div>
+                </div>
+
+                <!-- Side Panel (Quick Stats / Alerts) -->
+                <div class="space-y-6">
+                    <div class="glass-card p-6 rounded-xl">
+                        <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">실시간 모니터링 키워드</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-full text-xs hover:border-defense-cyan hover:text-defense-cyan cursor-pointer transition-colors">#다층방공체계</span>
+                            <span class="px-3 py-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-full text-xs hover:border-defense-cyan hover:text-defense-cyan cursor-pointer transition-colors">#지능형항적융합</span>
+                            <span class="px-3 py-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-full text-xs hover:border-defense-cyan hover:text-defense-cyan cursor-pointer transition-colors">#고에너지레이저</span>
+                            <span class="px-3 py-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-full text-xs hover:border-defense-cyan hover:text-defense-cyan cursor-pointer transition-colors">#워리어플랫폼</span>
+                            <span class="px-3 py-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-full text-xs hover:border-defense-cyan hover:text-defense-cyan cursor-pointer transition-colors">#C5ISR</span>
+                            <span class="px-3 py-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-full text-xs hover:border-defense-cyan hover:text-defense-cyan cursor-pointer transition-colors">#GPS스푸핑</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-xl bg-gradient-to-br from-navy-900 to-defense-blue/20">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-white">자동화 시스템 상태</h3>
+                            <i class="fa-solid fa-circle-check text-green-500"></i>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-400">
+                            <li class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <span>국방과학연구소 RSS 연동</span>
+                                <span class="text-green-400 text-xs bg-green-400/10 px-2 py-0.5 rounded">정상</span>
+                            </li>
+                            <li class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <span>방위사업청 보도자료 스크래핑</span>
+                                <span class="text-green-400 text-xs bg-green-400/10 px-2 py-0.5 rounded">정상</span>
+                            </li>
+                            <li class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <span>글로벌 국방 저널 요약 AI</span>
+                                <span class="text-green-400 text-xs bg-green-400/10 px-2 py-0.5 rounded">정상</span>
+                            </li>
+                            <li class="flex justify-between items-center pt-1">
+                                <span>다음 업데이트 예정</span>
+                                <span class="text-slate-300 text-xs">내일 08:00 AM</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-navy-950 border-t border-slate-800 py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center mb-4 md:mb-0">
+                <i class="fa-solid fa-shield-halved text-defense-cyan text-2xl mr-3"></i>
+                <div>
+                    <span class="font-bold text-lg text-white block leading-none">대드론 통합 대시보드</span>
+                    <span class="text-xs text-slate-500">지능형 방공 체계 연구 프로젝트</span>
+                </div>
+            </div>
+            <div class="text-slate-500 text-sm text-center md:text-right">
+                &copy; <span id="year"></span> Anti-Drone Defense System Dashboard. <br class="md:hidden">All rights reserved.<br>
+                <span class="text-xs text-slate-600 mt-1 block">본 사이트는 국방기술기획 문헌을 바탕으로 구성된 개념 실증용 UI입니다.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Mobile Menu Toggle
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            
+            btn.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+
+            // 2. Set Current Date & Year
+            const dateElement = document.getElementById('current-date');
+            const yearElement = document.getElementById('year');
+            const now = new Date();
+            
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            dateElement.textContent = now.toLocaleDateString('ko-KR', options);
+            yearElement.textContent = now.getFullYear();
+
+            // 3. Navbar scroll effect
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 20) {
+                    navbar.classList.add('shadow-lg', 'shadow-slate-900/50');
+                    navbar.style.background = 'rgba(15, 23, 42, 0.9)';
+                } else {
+                    navbar.classList.remove('shadow-lg', 'shadow-slate-900/50');
+                    navbar.style.background = 'rgba(30, 41, 59, 0.4)';
+                }
+            });
+
+            // 4. Mock Data Generation for News Feed (Simulating RSS/DB pull)
+            const newsData = [
+                {
+                    category: "기관 발표",
+                    badgeColor: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+                    title: "방위사업청, 접적지역 대드론 통합체계 실전 배치 가속화 선언",
+                    summary: "소형 공격 드론의 위협에 대비해 레이더와 EO/IR 센서가 융합된 탐지 시스템과 재밍 장비를 통합한 하드/소프트킬 융합 체계의 조기 전력화를 추진합니다.",
+                    time: "1시간 전",
+                    source: "K-Defense News"
+                },
+                {
+                    category: "기술 동향",
+                    badgeColor: "text-defense-cyan bg-defense-cyan/10 border-defense-cyan/20",
+                    title: "차세대 방공망의 핵심: AI 기반 다중 항적 융합 알고리즘 논문 게재",
+                    summary: "국방과학연구소 주도 연구팀이 지상 및 공중 레이더의 불규칙한 데이터를 실시간으로 융합, 군집 드론의 기동 패턴을 예측하는 지능형 알고리즘을 발표했습니다.",
+                    time: "3시간 전",
+                    source: "미래국방기술저널"
+                },
+                {
+                    category: "무기 체계",
+                    badgeColor: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20",
+                    title: "고에너지 레이저(HEL) 대공무기 체계, 기동형 플랫폼 탑재 시험 성공",
+                    summary: "기존 고정형에서 벗어나 차량 탑재가 가능한 소형화된 레이저 발사장치와 정밀 빔 결합기를 활용하여 1km 밖의 소형 드론 요격 시험을 성공적으로 마쳤습니다.",
+                    time: "5시간 전",
+                    source: "Global Defense Review"
+                },
+                {
+                    category: "전투 체계",
+                    badgeColor: "text-green-400 bg-green-400/10 border-green-400/20",
+                    title: "워리어 플랫폼 진화: 보병용 초소형 스마트 유도탄 대드론 타격 연동",
+                    summary: "일선 전투원들이 동시다발적인 저속 대공표적 위협에 직접 대응할 수 있도록, 개인전투체계와 연동되는 소형 하드킬 타격 무장의 실증 테스트가 시작되었습니다.",
+                    time: "어제",
+                    source: "Tech & Military"
+                }
+            ];
+
+            // 5. Render News Items
+            const newsContainer = document.getElementById('news-container');
+            
+            // Simulate network delay for effect
+            setTimeout(() => {
+                newsContainer.innerHTML = ''; // Clear loading spinner
+                
+                newsData.forEach((news, index) => {
+                    // Stagger animation delay
+                    const delay = index * 100;
+                    
+                    const articleHTML = `
+                        <article class="glass p-5 rounded-xl border border-slate-800 hover:border-slate-600 transition-all hover:bg-slate-800/40 group cursor-pointer" style="animation: fadeIn 0.5s ease-out ${delay}ms both;">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-bold px-2.5 py-1 rounded border ${news.badgeColor}">${news.category}</span>
+                                <span class="text-xs text-slate-500 flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${news.time}</span>
+                            </div>
+                            <h4 class="text-lg font-bold text-white mt-3 mb-2 group-hover:text-defense-cyan transition-colors">${news.title}</h4>
+                            <p class="text-slate-400 text-sm line-clamp-2 leading-relaxed mb-4">
+                                ${news.summary}
+                            </p>
+                            <div class="flex justify-between items-center border-t border-slate-800/50 pt-3">
+                                <span class="text-xs font-medium text-slate-500"><i class="fa-solid fa-newspaper mr-1"></i> ${news.source}</span>
+                                <span class="text-xs font-semibold text-defense-blue group-hover:text-defense-accent transition-colors flex items-center gap-1">자세히 보기 <i class="fa-solid fa-arrow-right text-[10px] transform group-hover:translate-x-1 transition-transform"></i></span>
+                            </div>
+                        </article>
+                    `;
+                    newsContainer.innerHTML += articleHTML;
+                });
+            }, 800); // 0.8s loading simulation
+
+        });
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</body>
+</html>
